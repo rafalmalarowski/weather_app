@@ -12,36 +12,58 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   List<Map> citiesList = [
-    {'cityName': 'Warsaw', 'temperature': 20},
-    {'cityName': 'Sydney', 'temperature': 26},
-    {'cityName': 'New York', 'temperature': 18}
+    {'cityName': 'Warsaw', 'temperature': 20, 'isFav': true},
+    {'cityName': 'Sydney', 'temperature': 26, 'isFav': false},
+    {'cityName': 'New York', 'temperature': 18, 'isFav': false}
   ];
+
+  bool isFiltered = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          actions: [
+            IconButton(
+                onPressed: (() {
+                  setState(() {
+                    isFiltered = !isFiltered;
+                  });
+                }),
+                icon: const Icon(Icons.star_half))
+          ],
           title: const Text('City weather'),
         ),
         body: Container(
           child: ListView.builder(
-            itemCount: citiesList.length,
+            itemCount: isFiltered
+                ? citiesList.where((city) => city['isFav']).toList().length
+                : citiesList.length,
             itemBuilder: ((context, index) {
+              Map city = isFiltered
+                  ? citiesList.where((city) => city['isFav']).toList()[index]
+                  : citiesList[index];
+
               return ListTile(
                 leading: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.star),
+                  onPressed: () {
+                    setState(() {
+                      city['isFav'] = !city['isFav'];
+                    });
+                  },
+                  icon: Icon(Icons.star,
+                      color: city['isFav'] ? Colors.orange : Colors.grey),
                 ),
-                title: Text(citiesList[index]['cityName'] +
+                title: Text(city['cityName'] +
                     '' +
-                    citiesList[index]['temperature'].toString() +
+                    city['temperature'].toString() +
                     ' °C'),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => WeatherDetails(
-                        weatherInfo: citiesList[index],
+                        weatherInfo: city,
                       ),
                     ),
                   );

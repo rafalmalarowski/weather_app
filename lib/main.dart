@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:weather_app/views/home.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  String DB_NAME = 'cities_db.db';
+  String databsesPath = await getDatabasesPath();
+  print(databsesPath);
+  final db = await openDatabase(join(await getDatabasesPath(), DB_NAME),
+      version: 1, onCreate: (Database db, int version) async {
+    print('DB has been succesfully created');
+    await db.execute(
+        'CREATE TABLE cities (id INTEGER PRIMARY KEY, city_name TEXT);');
+  });
   runApp(const MyApp());
 }
 
