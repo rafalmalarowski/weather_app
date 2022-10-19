@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:weather_app/views/weather_add.dart';
 import 'package:weather_app/views/weather_details.dart';
 import 'package:weather_app/views/weather_mgmt.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+
+import '../config.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -11,6 +15,29 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  late Database database;
+
+  void initDb() async {
+    final db = await openDatabase(
+      join(await getDatabasesPath(), DB_NAME),
+      version: 1,
+    );
+    List<Map> citiesList =
+        await db.rawQuery('SELECT id, city_name FROM cities');
+
+    setState(() {
+      database = db;
+    });
+
+    void initState() {
+      WidgetsBinding.instance?.addPostFrameCallback((_) {
+        initDb();
+
+        super.initState();
+      });
+    }
+  }
+
   List<Map> citiesList = [
     {'cityName': 'Warsaw', 'temperature': 20, 'isFav': true},
     {'cityName': 'Sydney', 'temperature': 26, 'isFav': false},
@@ -115,8 +142,12 @@ class _HomeState extends State<Home> {
         floatingActionButton: FloatingActionButton(
             child: const Icon(Icons.add),
             onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const WeatherAdd()));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => WeatherAdd(
+                            database: database,
+                          )));
             }));
   }
 }

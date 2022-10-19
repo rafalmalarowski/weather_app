@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 
 class WeatherAdd extends StatefulWidget {
-  const WeatherAdd({super.key});
+  final Database database;
+
+  const WeatherAdd({super.key, required this.database});
 
   @override
   State<WeatherAdd> createState() => _WeatherAddState();
@@ -9,6 +13,16 @@ class WeatherAdd extends StatefulWidget {
 
 class _WeatherAddState extends State<WeatherAdd> {
   bool isFav = false;
+  TextEditingController cityNameFieldController = new TextEditingController();
+
+  void addCityToDb(String cityName, bool isFav) async {
+    int isFavDigit = isFav ? 1 : 0;
+    await widget.database.transaction((txn) async {
+      int id = await txn.rawInsert(
+          'INSERT INTO cities(city_name, is_fav) VALUES("$cityName", $isFavDigit)');
+      print('inserted city with id: $id');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +35,7 @@ class _WeatherAddState extends State<WeatherAdd> {
           child: Column(
             children: [
               TextField(
+                controller: cityNameFieldController,
                 decoration: InputDecoration(
                     prefixIcon: Icon(Icons.location_city),
                     border: OutlineInputBorder(
@@ -41,9 +56,18 @@ class _WeatherAddState extends State<WeatherAdd> {
                   const Text('Ulubione')
                 ],
               ),
-              ElevatedButton(onPressed: () {
-                Navigator.of(context).pop();
-              }, child: const Text('Zapisz'),),
+              ElevatedButton(
+                onPressed: () {
+                  print(cityNameFieldController.value.text.toString() +
+                      '' +
+                      this.isFav.toString());
+                  addCityToDb(cityNameFieldController.value.text.toString(),
+                      this.isFav);
+
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Zapisz'),
+              ),
             ],
           ),
         ));
